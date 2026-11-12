@@ -8,6 +8,18 @@ While building **ForkContext**—a persistent context-continuity layer across AI
 
 This repository contains the experimental protocol, subspace ablation specs, and synthetic evaluation harnesses designed to test that hypothesis.
 
+**why we** care about this while building ForkContext, you can explain it in two sentences:
+
+The Engineering Insight: When ForkContext moves project state from ChatGPT to Claude or Gemini, you aren't just copying text—you are transplanting a partial reasoning trajectory into a fresh model instance.
+
+The Practical Takeaway: Because LLMs treat first-person assistant turns differently from user/system reference blocks in their attention and residual-stream representations, how you structure injected memory (reconstructing assistant-turn history vs. dumping raw system-prompt bullets) directly affects whether the model treats that state as an active commitment or passive background text.
+**Thinking**
+While building ForkContext—a Chrome extension that syncs persistent project memory across ChatGPT, Claude, and Gemini using FastAPI, pgvector, and local IndexedDB—I ran into a deeper systems question beyond just vector retrieval: How does an LLM actually represent injected cross-turn state internally?
+
+Since transformers are stateless between API calls, transplanting a reasoning trajectory from one session into another relies on how the residual stream binds that context. In mid-to-late layers, models separate 'my own prior assistant trajectory' from passive third-party reference text. If you dump retrieved memory as a generic system block, the model often treats it like external documentation rather than an active commitment—leading to plan drift.
+
+Understanding those internal state-tracking representations directly shaped how we structure context injection in ForkContext, preserving turn-level continuity so the target model picks up the exact reasoning state seamlessly.
+
 ## Core Methodology
 1. **Subspace & Workspace Readouts (Jacobian Lens):**
    - Computes local Jacobian-space (`J-space`) projections across mid-to-late transformer layers to isolate verbalizable global broadcast representations.
